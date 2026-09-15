@@ -18,7 +18,9 @@ func main() {
 
 	fileDir := http.Dir(".")
 	fileHandler := http.FileServer(fileDir)
-	mux.Handle("/", fileHandler)
+	appHandler := http.StripPrefix("/app", fileHandler)
+	mux.Handle("/app/", appHandler)
+	mux.HandleFunc("/healthz", endpointHandler)
 
 	err := server.ListenAndServe()
 	if err != nil {
@@ -26,4 +28,5 @@ func main() {
 	}
 
 	log.Printf("Serving on port: %s\n", server.Addr)
+
 }
