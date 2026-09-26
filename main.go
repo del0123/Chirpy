@@ -25,6 +25,7 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", endpointHandler)
 	mux.HandleFunc("GET /admin/metrics", apiCfg.metricsHandler)
 	mux.HandleFunc("POST /admin/reset", apiCfg.resetHandler)
+	mux.HandleFunc("POST /api/validate_chirp", validateChirpHandler)
 
 	err := server.ListenAndServe()
 	if err != nil {
