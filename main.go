@@ -1,13 +1,29 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"sync/atomic"
+
+	"github.com/del0123/Chirpy/internal/database"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
 	fmt.Println("Starting server...")
+	godotenv.Load()
+	dbURL := os.Getenv("DB_URL")
+	fmt.Println("Connecting to database...")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	dbQueries := database.New(db)
 
 	mux := http.NewServeMux()
 
@@ -16,7 +32,10 @@ func main() {
 		Handler: mux,
 	}
 
-	apiCfg := &apiConfig{}
+	apiCfg := &apiConfig{
+		fileserverHits: atomic.Int32{},
+		db:             dbQueries,
+	}
 
 	fileDir := http.Dir(".")
 	fileHandler := http.FileServer(fileDir)
@@ -27,7 +46,7 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", apiCfg.resetHandler)
 	mux.HandleFunc("POST /api/validate_chirp", validateChirpHandler)
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}
