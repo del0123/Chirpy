@@ -17,6 +17,8 @@ func main() {
 	fmt.Println("Starting server...")
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
+	plataform := os.Getenv("PLATFORM")
+
 	fmt.Println("Connecting to database...")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -35,6 +37,7 @@ func main() {
 	apiCfg := &apiConfig{
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
+		platform:       plataform,
 	}
 
 	fileDir := http.Dir(".")
@@ -44,7 +47,9 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", endpointHandler)
 	mux.HandleFunc("GET /admin/metrics", apiCfg.metricsHandler)
 	mux.HandleFunc("POST /admin/reset", apiCfg.resetHandler)
-	mux.HandleFunc("POST /api/validate_chirp", validateChirpHandler)
+	//mux.HandleFunc("POST /api/validate_chirp", validateChirpHandler)
+	mux.HandleFunc("POST /api/users", apiCfg.createUserHandler)
+	mux.HandleFunc("POST /api/chirps", apiCfg.createChirpHandler)
 
 	err = server.ListenAndServe()
 	if err != nil {

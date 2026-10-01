@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -49,23 +50,11 @@ func chirpProfanityCleaner(chirp string) string {
 	return strings.Join(words, " ")
 }
 
-func validateChirpHandler(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	params := ChirpRequest{}
-
-	err := decoder.Decode(&params)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid JSON")
-		return
+func validateChirp(body string) (string, error) {
+	if len(body) > 140 {
+		return "", fmt.Errorf("chirp is too long")
 	}
 
-	if len(params.Body) > 140 {
-		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
-		return
-	}
-
-	params.Body = chirpProfanityCleaner(params.Body)
-
-	respondWithJSON(w, http.StatusOK, ChirpResponse{CleanedBody: params.Body})
-
+	cleanedChirp := chirpProfanityCleaner(body)
+	return cleanedChirp, nil
 }

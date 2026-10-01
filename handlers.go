@@ -28,7 +28,20 @@ func (cfg *apiConfig) metricsHandler(w http.ResponseWriter, r *http.Request) {
 
 func (cfg *apiConfig) resetHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
+
+	if cfg.platform != "dev" {
+		http.Error(w, "Unauthorized Access attempt, FBI notified!", http.StatusForbidden)
+		return
+	}
+
 	cfg.fileserverHits.Store(0)
-	fmt.Fprintf(w, "Hits reset to %d", cfg.fileserverHits.Load())
+	err := cfg.db.DeleteUsers(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "All users deleted and hits reset to %d", cfg.fileserverHits.Load())
+
 }
