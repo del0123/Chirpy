@@ -58,3 +58,59 @@ func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
 }
+
+func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	chirps, err := cfg.db.GetChirps(ctx)
+	if err != nil {
+		http.Error(w, "Failed to get chirps", http.StatusInternalServerError)
+		return
+	}
+
+	chirpResponses := []Chirp{}
+
+	for _, chirp := range chirps {
+		chirpResponse := Chirp{
+			ID:        chirp.ID,
+			CreatedAt: chirp.CreatedAt,
+			UpdatedAt: chirp.UpdatedAt,
+			Body:      chirp.Body,
+			UserID:    chirp.UserID,
+		}
+		chirpResponses = append(chirpResponses, chirpResponse)
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(chirpResponses)
+}
+
+func (cfg *apiConfig) getChirpHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	idString := r.PathValue("chirpID")
+
+	chirpID, err := uuid.Parse(idString)
+	if err != nil {
+		http.Error(w, "Invalid Chirp ID", http.StatusBadRequest)
+		return
+	}
+
+	chirp, err := cfg.db.GetChirp(ctx, chirpID)
+	if err != nil {
+		http.Error(w, "Chirp not found", http.StatusNotFound)
+		return
+	}
+
+	response := Chirp{
+		ID:        chirp.ID,
+		CreatedAt: chirp.CreatedAt,
+		UpdatedAt: chirp.UpdatedAt,
+		Body:      chirp.Body,
+		UserID:    chirp.UserID,
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
