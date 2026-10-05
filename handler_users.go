@@ -2,9 +2,12 @@ package main
 
 import (
 	"encoding/json"
+
 	"net/http"
 	"time"
 
+	"github.com/del0123/Chirpy/internal/auth"
+	"github.com/del0123/Chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -19,7 +22,8 @@ func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 
 	var params struct {
-		Email string `json:"email"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&params)
@@ -28,7 +32,16 @@ func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user, err := cfg.db.CreateUser(ctx, params.Email)
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		return
+	}
+
+	user, err := cfg.db.CreateUser(ctx, database.CreateUserParams{
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
+	})
 	if err != nil {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
