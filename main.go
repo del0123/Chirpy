@@ -18,6 +18,7 @@ func main() {
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
 	plataform := os.Getenv("PLATFORM")
+	theJwtSecret := os.Getenv("JWT_SECRET")
 
 	fmt.Println("Connecting to database...")
 	db, err := sql.Open("postgres", dbURL)
@@ -38,6 +39,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
 		platform:       plataform,
+		jwtSecret:      theJwtSecret,
 	}
 
 	fileDir := http.Dir(".")
