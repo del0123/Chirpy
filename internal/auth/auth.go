@@ -1,6 +1,9 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+
 	"github.com/alexedwards/argon2id"
 )
 
@@ -19,4 +22,17 @@ func CheckPasswordHash(password, hash string) (bool, error) {
 	}
 	return match, nil
 
+}
+
+func MakeRefreshToken() (string, error) {
+	token := make([]byte, 32)
+
+	_, err := rand.Read(token)
+	if err != nil {
+		return "", err
+	}
+
+	response := hex.EncodeToString(token)
+
+	return response, nil
 }

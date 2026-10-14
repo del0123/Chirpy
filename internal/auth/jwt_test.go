@@ -50,7 +50,7 @@ func TestMakeAndValidateJWT(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
-			signedString, err := MakeJWT(tc.userID, tc.tokenSecret, tc.expiresIn)
+			signedString, err := MakeJWT(tc.userID, tc.tokenSecret)
 			if err != nil {
 				t.Fatalf("Failed to make JWT: %v", err)
 			}
