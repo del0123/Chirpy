@@ -139,7 +139,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (cfg *apiConfig) refreshHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	tokenString, err := auth.GetBearerToken(r.Header)
@@ -171,7 +171,7 @@ func (cfg *apiConfig) refreshHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (cfg *apiConfig) revokeHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) revokeTokenHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	tokenString, err := auth.GetBearerToken(r.Header)
@@ -186,4 +186,61 @@ func (cfg *apiConfig) revokeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (cfg *apiConfig) userUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	tokenString, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(tokenString, cfg.jwtSecret)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	params := struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}{}
+	err = json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	newHashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	user, err := cfg.db.UpdateUser(ctx, database.UpdateUserParams{
+		Email:          params.Email,
+		HashedPassword: newHashedPassword,
+		ID:             userID})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	response := struct {
+		ID        uuid.UUID `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Email     string    `json:"email"`
+	}{
+		ID:        user.ID,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Email:     user.Email,
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
