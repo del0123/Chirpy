@@ -26,14 +26,14 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 		return
 	}
 	//Instead of Marshal, I could also have used the json.NewEncoder(w).Encode(payload) method (streamed).
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 	w.Write(data)
 }
 
-func respondWithError(w http.ResponseWriter, code int, msg string) {
-	respondWithJSON(w, code, ErrorResponse{Error: msg})
-}
+//func respondWithError(w http.ResponseWriter, code int, msg string) {
+//respondWithJSON(w, code, ErrorResponse{Error: msg})
+//}
 
 func chirpProfanityCleaner(chirp string) string {
 	// TODO: Implement profanity cleaner logic

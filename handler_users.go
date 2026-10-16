@@ -133,10 +133,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: refreshTokenString,
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
-
+	respondWithJSON(w, http.StatusOK, response)
 }
 
 func (cfg *apiConfig) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -166,9 +163,7 @@ func (cfg *apiConfig) refreshTokenHandler(w http.ResponseWriter, r *http.Request
 		Token: jwtString,
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	respondWithJSON(w, http.StatusOK, response)
 }
 
 func (cfg *apiConfig) revokeTokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -240,7 +235,5 @@ func (cfg *apiConfig) userUpdateHandler(w http.ResponseWriter, r *http.Request) 
 		Email:     user.Email,
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	respondWithJSON(w, http.StatusOK, response)
 }
