@@ -58,6 +58,7 @@ func main() {
 	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.deleteChirpHandler)
 	mux.HandleFunc("POST /api/refresh", apiCfg.refreshTokenHandler)
 	mux.HandleFunc("POST /api/revoke", apiCfg.revokeTokenHandler)
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.polkaWebhookHandler)
 
 	err = server.ListenAndServe()
 	if err != nil {
