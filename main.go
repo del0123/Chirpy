@@ -19,6 +19,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	plataform := os.Getenv("PLATFORM")
 	theJwtSecret := os.Getenv("JWT_SECRET")
+	thePolkaKey := os.Getenv("POLKA_KEY")
 
 	fmt.Println("Connecting to database...")
 	db, err := sql.Open("postgres", dbURL)
@@ -40,6 +41,7 @@ func main() {
 		db:             dbQueries,
 		platform:       plataform,
 		jwtSecret:      theJwtSecret,
+		polkaKey:       thePolkaKey,
 	}
 
 	fileDir := http.Dir(".")
