@@ -71,16 +71,33 @@ func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request)
 
 func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	inputAuthorID := r.URL.Query().Get("author_id")
 
-	chirps, err := cfg.db.GetChirps(ctx)
-	if err != nil {
-		http.Error(w, "Failed to get chirps", http.StatusInternalServerError)
-		return
+	var dbChirps []database.Chirp
+	var err error
+
+	if inputAuthorID != "" {
+		authorID, err := uuid.Parse(inputAuthorID)
+		if err != nil {
+			http.Error(w, "Invalid author_id format", http.StatusBadRequest)
+			return
+		}
+		dbChirps, err = cfg.db.GetChirpsFromUser(ctx, authorID)
+		if err != nil {
+			http.Error(w, "Failed to get chirps from author", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		dbChirps, err = cfg.db.GetChirps(ctx)
+		if err != nil {
+			http.Error(w, "Failed to get chirps", http.StatusInternalServerError)
+			return
+		}
 	}
 
-	chirpResponses := []Chirp{}
+	chirpsResponse := []Chirp{}
 
-	for _, chirp := range chirps {
+	for _, chirp := range dbChirps {
 		chirpResponse := Chirp{
 			ID:        chirp.ID,
 			CreatedAt: chirp.CreatedAt,
@@ -88,10 +105,10 @@ func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, r *http.Request) {
 			Body:      chirp.Body,
 			UserID:    chirp.UserID,
 		}
-		chirpResponses = append(chirpResponses, chirpResponse)
+		chirpsResponse = append(chirpsResponse, chirpResponse)
 	}
 
-	respondWithJSON(w, http.StatusOK, chirpResponses)
+	respondWithJSON(w, http.StatusOK, chirpsResponse)
 }
 
 func (cfg *apiConfig) getChirpHandler(w http.ResponseWriter, r *http.Request) {
